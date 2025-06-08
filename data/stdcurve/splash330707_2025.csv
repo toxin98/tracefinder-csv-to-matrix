@@ -1,0 +1,17 @@
+component,formula,b,amount,applyto
+Cer ISTD,lg(area)=1.034lg(pmol)+7.9963,7.9963,400,Cer
+CerP ISTD,lg(area)=1.0428lg(pmol)+7.202,7.202,400,CerP
+CL ISTD,lg(area)=1.055lg(pmol)+7.1696,7.1696,800,CL
+HexCer ISTD,lg(area)=1.121lg(pmol)+7.1284,7.1284,400,"HexCer,Hex2Cer"
+LPA ISTD,lg(area)=1.0862lg(pmol)+7.3012,7.3012,100,"LPA,eLPA"
+LPC ISTD,lg(area)=0.8664lg(pmol)+8.4652,8.4652,450,"LPC,eLPC"
+LPE ISTD,lg(area)=1.0325lg(pmol)+7.1682,7.1682,100,"LPE,eLPE"
+LPS ISTD,lg(area)=1.1135lg(pmol)+7.1197,7.1197,100,"LPS,eLPS"
+PA ISTD,lg(area)=1.0709lg(pmol)+7.3652,7.3652,100,"PA,ePA"
+PC ISTD,lg(area)=1.0018lg(pmol)+8.1508,8.1508,2100,"PC,ePC"
+PE ISTD,lg(area)=1.1091lg(pmol)+6.8003,6.8003,100,"PE,ePE"
+PG ISTD,lg(area)=1.0846lg(pmol)+7.0019,7.0019,400,"PG,ePG"
+PI ISTD,lg(area)=1.035lg(pmol)+6.9449,6.9449,120,"PI,LPI,ePI,eLPI"
+PS ISTD,lg(area)=1.076lg(pmol)+6.7369,6.7369,100,"PS,ePS"
+SM ISTD,lg(area)=1.1036lg(pmol)+7.7135,7.7135,400,SM
+TAG ISTD,lg(area)=0.937lg(pmol)+8.2123,8.2123,700,TAG

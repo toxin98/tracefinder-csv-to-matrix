@@ -102,6 +102,7 @@ def process_and_export(
     result5_suffix: str = "_result5_pmol"
 ):
     # —— 1. 读取表格 A 并提取关键列 —— #
+    tracefinder_csv_path = tracefinder_csv_path.strip().strip('"')
     df = pd.read_csv(tracefinder_csv_path)
     df.columns = df.columns.str.strip()
 
@@ -190,11 +191,13 @@ def process_and_export(
 def main():
     print("TraceFinder CSV to Matrix")
     print("-------------------------")
-    path_a = input("TraceFinder CSV path: ").strip().strip('"')
+    path_a = input("TraceFinder CSV path: ")
 
-    stdcurve_dir = "stdcurve"
+
+    PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    STDCURVE_DIR = os.path.join(PROJECT_ROOT, "data", "stdcurve")
     print("Select a stdcurve CSV file: ")
-    stdcurve_csv = select_csv_file(stdcurve_dir)
+    stdcurve_csv = select_csv_file(str(STDCURVE_DIR))
     if stdcurve_csv:
         print(f"\n\033[1;32m✓ 已选择文件: {stdcurve_csv}\033[0m")
     else:
@@ -202,6 +205,7 @@ def main():
 
 
     std_size = get_std_size()
+
 
     try:
         process_and_export(path_a, stdcurve_csv, std_size)
