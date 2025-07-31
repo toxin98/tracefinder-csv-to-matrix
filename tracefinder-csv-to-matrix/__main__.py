@@ -1,124 +1,48 @@
-import os
-import sys
 import pandas as pd
 import numpy as np
 from pathlib import Path
 
-# —— 跨平台读取按键 ——
-if sys.platform == 'win32':
-    import msvcrt
-else:
-    import tty
-    import termios
-
-class SimpleMenu:
-    def __init__(self, options):
-        self.options = options
-        self.selected = 0
-        self._print_menu()
-
-    def _print_menu(self):
-        sys.stdout.write("\033[{}A".format(len(self.options)))
-        for i, opt in enumerate(self.options):
-            prefix = "\033[1;32m>>>\033[0m" if i == self.selected else "   "
-            line = f"{prefix} \033[1m{opt}\033[0m" if i == self.selected else f"{prefix} {opt}"
-            sys.stdout.write("\033[K" + line + "\n")
-        sys.stdout.flush()
-
-    def run(self):
-        while True:
-            key = self._get_key()
-            if key == 'up' and self.selected > 0:
-                self.selected -= 1
-                self._print_menu()
-            elif key == 'down' and self.selected < len(self.options) - 1:
-                self.selected += 1
-                self._print_menu()
-            elif key == 'enter':
-                return self.options[self.selected]
-            elif key in ['esc', 'ctrl_c']:
-                return None
-
-    def _get_key(self):
-        if sys.platform == 'win32':
-            ch = msvcrt.getch()
-            if ch == b'\xe0':
-                ch = msvcrt.getch()
-                return {'H': 'up', 'P': 'down', 'M': 'right', 'K': 'left'}.get(ch.decode(), '')
-            elif ch == b'\r':
-                return 'enter'
-            elif ch == b'\x1b':
-                return 'esc'
-            elif ch == b'\x03':  # 捕获 Windows 的 Ctrl+C
-                return 'ctrl_c'
-        else:
-            fd = sys.stdin.fileno()
-            old_settings = termios.tcgetattr(fd)
-            try:
-                tty.setraw(sys.stdin.fileno())
-                ch = sys.stdin.read(1)
-                if ch == '\x1b':
-                    ch = sys.stdin.read(2)
-                    return {'[A': 'up', '[B': 'down', '[C': 'right', '[D': 'left'}.get(ch, '')
-                elif ch == '\n':
-                    return 'enter'
-                elif ch == '\x03':  # 捕获 Unix 的 Ctrl+C
-                    return 'ctrl_c'
-            finally:
-                termios.tcsetattr(fd, termios.TCSADRAIN, old_settings)
-        return ''
-
-def select_csv_file(directory):
-
-    files = [f for f in os.listdir(directory) if f.endswith('.csv')]
-
-    print("\n Use ↑↓ to choose，回车确认:\n")  # here didn't work
-    menu = SimpleMenu(files)
-    selected = menu.run()
-    return os.path.join(directory, selected) if selected else None
-
-
-def get_std_size() -> float:
-    """提示用户输入 std_size 并返回验证后的浮点数"""
+def get_standard_size() -> float:
+    """提示用户输入 standard_size 并返回验证后的浮点数"""
     while True:
         try:
-            std_size = float(input("请输入你实际所用混标的份数: "))
-            if std_size <= 0:
+            standard_size = float(input("请输入你实际所用混标的份数: "))
+            if standard_size <= 0:
                 print("错误: 必须为正数，请重新输入")
             else:
-                return std_size
+                return standard_size
         except ValueError:
             print("错误: 请输入有效数字")
 
-
 def process_and_export(
     tracefinder_csv_path: str,
-    stdcurve_csv_path: str,
-    std_size: float,
+    standardcurve_csv_path: str,
+    standard_size: float,
     result1_suffix: str = "_result1_提取CompoundFinenameArea",
     result2_suffix: str = "_result2_不具有标准曲线的",
     result3_suffix: str = "_result3_外标法转换后",
     result4_suffix: str = "_result4_检查ISTD",
     result5_suffix: str = "_result5_pmol"
 ):
+
     # —— 1. 读取表格 A 并提取关键列 —— #
     tracefinder_csv_path = tracefinder_csv_path.strip().strip('"')
     df = pd.read_csv(tracefinder_csv_path)
     df.columns = df.columns.str.strip()
 
-
     # —— 2. 读取标准曲线表 B 并转化 —— #
-    stdcurve = pd.read_csv(stdcurve_csv_path)
-    stdcurve.columns = stdcurve.columns.str.strip()
-    stdcurve[["a", "b"]] = stdcurve["formula"].str.extract(
+    standardcurve_csv_path = standardcurve_csv_path.strip().strip('"')
+    standardcurve = pd.read_csv(standardcurve_csv_path)
+    standardcurve.columns = standardcurve.columns.str.strip()
+    standardcurve[["a", "b"]] = standardcurve["formula"].str.extract(
         r"lg\(area\)=([\d\.]+)lg\(pmol\)\+([\d\.]+)"
     ).astype(float)
-    stdcurve = stdcurve.drop(columns="formula")
-    stdcurve["applyto"] = stdcurve["applyto"].str.split(",").map(
+    standardcurve = standardcurve.drop(columns="formula")
+    standardcurve["applyto"] = standardcurve["applyto"].str.split(",").map(
         lambda x: [s.strip() for s in x]
     )
-    stdcurve_table = stdcurve.explode("applyto")
-    stdcurve_table['amount'] = stdcurve_table['amount'] * std_size
+    standardcurve_table = standardcurve.explode("applyto")
+    standardcurve_table['amount'] = standardcurve_table['amount'] * standard_size
 
     # —— 3. 计算 —— #
     needed = ["Compound", "Filename", "Area"]
@@ -134,11 +58,11 @@ def process_and_export(
         category=lambda x: x["var"].str.extract(r"(\S+)", expand=False)
     )
 
-    df_result2 = df_with_category[~df_with_category["category"].isin(stdcurve_table["applyto"])].loc[:, ["var", "Filename", "Area"]]
+    df_result2 = df_with_category[~df_with_category["category"].isin(standardcurve_table["applyto"])].loc[:, ["var", "Filename", "Area"]]
 
     merged_df = pd.merge(
         df_with_category,
-        stdcurve_table,
+        standardcurve_table,
         how="inner",
         left_on="category",
         right_on="applyto"
@@ -167,7 +91,6 @@ def process_and_export(
     df_result4 = df_result4.loc[:, ["var", "Filename", "pmol_ES"]]
     df_result5 = df_result5.loc[:, ["var", "Filename", "pmol_ES_IS"]]
 
-
     # —— 5. 构造输出文件名 & 导出 —— #
     path_obj  = Path(tracefinder_csv_path)
     base_path = path_obj.parent / path_obj.stem
@@ -187,31 +110,24 @@ def process_and_export(
         wide_df.to_csv(write_csv_path, index=False, encoding="utf-8-sig")
         print(f"- \u2713 Successfully exported: {write_csv_path}")
 
-
 def main():
     print("TraceFinder CSV to Matrix")
     print("-------------------------")
     path_a = input("TraceFinder CSV path: ")
 
+    path_b = input("StandardCurve CSV path: ")
 
-    PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-    STDCURVE_DIR = os.path.join(PROJECT_ROOT, "data", "stdcurve")
-    print("Select a stdcurve CSV file: ")
-    stdcurve_csv = select_csv_file(str(STDCURVE_DIR))
-    if stdcurve_csv:
-        print(f"\n\033[1;32m✓ 已选择文件: {stdcurve_csv}\033[0m")
-    else:
-        print("\n\033[31m× 未选择文件\033[0m")
-
-
-    std_size = get_std_size()
-
+    standard_size = get_standard_size()
 
     try:
-        process_and_export(path_a, stdcurve_csv, std_size)
+        process_and_export(path_a, path_b, standard_size)
         print("✅ 全部处理完成！")
     except Exception as e:
         print("❌ 处理失败：", e)
 
 if __name__ == "__main__":
-    main()
+    try:
+        main()
+    except Exception as e:
+        print(f"\n❌ 程序发生异常：{e}")
+    input("\n按 Enter 键退出...")
