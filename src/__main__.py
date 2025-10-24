@@ -18,11 +18,11 @@ def process_and_export(
     tracefinder_csv_path: str,
     standardcurve_csv_path: str,
     standard_size: float,
-    result1_suffix: str = "_result1_提取CompoundFinenameArea",
-    result2_suffix: str = "_result2_不具有标准曲线的",
-    result3_suffix: str = "_result3_外标法转换后",
-    result4_suffix: str = "_result4_检查ISTD",
-    result5_suffix: str = "_result5_pmol"
+    result1_suffix: str = "_result01",  # 提取CompoundFinenameArea
+    result2_suffix: str = "_result02",  # 不具有标准曲线的
+    result3_suffix: str = "_result03",  # 外标法转换后
+    result4_suffix: str = "_result04",  # 检查ISTD
+    result5_suffix: str = "_result05"   # pmol
 ):
 
     # —— 1. 读取表格 A 并提取关键列 —— #
@@ -121,13 +121,13 @@ def main():
 
     try:
         process_and_export(path_a, path_b, standard_size)
-        print("✅ 全部处理完成！")
+        print("✅ Processing complete!")
     except Exception as e:
-        print("❌ 处理失败：", e)
+        print("❌ Processing failed: ", e)
 
 if __name__ == "__main__":
     try:
         main()
     except Exception as e:
-        print(f"\n❌ 程序发生异常：{e}")
-    input("\n按 Enter 键退出...")
+        print(f"\n❌ Program exception occurred: {e}")
+    input("\nPress Enter to exit")
