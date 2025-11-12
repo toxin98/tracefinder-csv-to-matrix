@@ -1,7 +1,7 @@
 import pandas as pd
 import numpy as np
-import datetime
 from pathlib import Path
+from datetime import datetime, timezone
 
 def get_standard_size() -> float:
     """提示用户输入 standard_size 并返回验证后的浮点数"""
@@ -114,7 +114,7 @@ def process_and_export(
     # —— 5. 日志记录 —— #
     log_file = path_obj.parent / "matrix_log.txt"
     with open(log_file, "w", encoding="utf-8") as f:
-        f.write(f"Last run: {datetime.datetime.now()}\n")
+        f.write(f"Last run: {datetime.now(timezone.utc).isoformat()}\n")
         f.write(f"standardcurve file: {Path(standardcurve_csv_path).name}\n")
 
 def main():
