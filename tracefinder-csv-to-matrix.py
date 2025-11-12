@@ -1,5 +1,6 @@
 import pandas as pd
 import numpy as np
+import datetime
 from pathlib import Path
 
 def get_standard_size() -> float:
@@ -8,11 +9,11 @@ def get_standard_size() -> float:
         try:
             standard_size = float(input("请输入你实际所用混标的份数: "))
             if standard_size <= 0:
-                print("错误: 必须为正数，请重新输入")
+                print("Error: 必须为正数，请重新输入")
             else:
                 return standard_size
         except ValueError:
-            print("错误: 请输入有效数字")
+            print("Error: 请输入有效数字")
 
 def process_and_export(
     tracefinder_csv_path: str,
@@ -112,8 +113,9 @@ def process_and_export(
 
     # —— 5. 日志记录 —— #
     log_file = path_obj.parent / "matrix_log.txt"
-    with open(log_file, "a") as f:
-        f.write(f"standardcurve={Path(standardcurve_csv_path).name}\n")
+    with open(log_file, "w", encoding="utf-8") as f:
+        f.write(f"Last run: {datetime.datetime.now()}\n")
+        f.write(f"standardcurve file: {Path(standardcurve_csv_path).name}\n")
 
 def main():
     print("TraceFinder CSV to Matrix")
