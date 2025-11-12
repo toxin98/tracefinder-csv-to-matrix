@@ -18,11 +18,11 @@ def process_and_export(
     tracefinder_csv_path: str,
     standardcurve_csv_path: str,
     standard_size: float,
-    result1_suffix: str = "_result01",  # 提取CompoundFinenameArea
-    result2_suffix: str = "_result02",  # 不具有标准曲线的
-    result3_suffix: str = "_result03",  # 外标法转换后
-    result4_suffix: str = "_result04",  # 检查ISTD
-    result5_suffix: str = "_result05"   # pmol
+    result01_suffix: str = "_01subset",  # 提取CompoundFinenameArea
+    result02_suffix: str = "_02unquantified",  # 不具有标准曲线的
+    result03_suffix: str = "_03quantified",  # 外标法转换后
+    result04_suffix: str = "_04standards",  # 检查ISTD
+    result05_suffix: str = "_matrix"   # 根据ISTD回收率计算样品中总的pmol
 ):
 
     # —— 1. 读取表格 A 并提取关键列 —— #
@@ -46,19 +46,19 @@ def process_and_export(
 
     # —— 3. 计算 —— #
     needed = ["Compound", "Filename", "Area"]
-    df_result1 = df[needed].copy()
-    df_result1["Area"] = pd.to_numeric(
-        df_result1["Area"],
+    df_result01 = df[needed].copy()
+    df_result01["Area"] = pd.to_numeric(
+        df_result01["Area"],
         errors="coerce",  # 将非数值转为NaN
         downcast="float"  # 自动向下转换为最节省内存的数值类型
     )
-    df_result1 = df_result1.rename(columns={"Compound": "var"})
+    df_result01 = df_result01.rename(columns={"Compound": "var"})
 
-    df_with_category = df_result1.assign(
+    df_with_category = df_result01.assign(
         category=lambda x: x["var"].str.extract(r"(\S+)", expand=False)
     )
 
-    df_result2 = df_with_category[~df_with_category["category"].isin(standardcurve_table["applyto"])].loc[:, ["var", "Filename", "Area"]]
+    df_result02 = df_with_category[~df_with_category["category"].isin(standardcurve_table["applyto"])].loc[:, ["var", "Filename", "Area"]]
 
     merged_df = pd.merge(
         df_with_category,
@@ -69,15 +69,15 @@ def process_and_export(
     )
     merged_df["pmol_ES"] = 10 ** ((np.log10(merged_df["Area"]) - merged_df["b"]) / merged_df["a"])
 
-    df_result4 = (
+    df_result04 = (
         merged_df[merged_df["var"].str.contains("ISTD")]
         .assign(recovery=lambda x: x["pmol_ES"] / x["amount"])
     )
 
-    df_result5 = (
+    df_result05 = (
         pd.merge(
             merged_df,
-            df_result4[["Filename", "component", "recovery"]],
+            df_result04[["Filename", "component", "recovery"]],
             how="left",
             on=["Filename", "component"]
         )
@@ -87,20 +87,20 @@ def process_and_export(
         .loc[lambda x: ~x["var"].str.contains("ISTD", na=False)]
     )
 
-    df_result3 = merged_df.loc[:, ["var", "Filename", "pmol_ES"]]
-    df_result4 = df_result4.loc[:, ["var", "Filename", "pmol_ES"]]
-    df_result5 = df_result5.loc[:, ["var", "Filename", "pmol_ES_IS"]]
+    df_result03 = merged_df.loc[:, ["var", "Filename", "pmol_ES"]]
+    df_result04 = df_result04.loc[:, ["var", "Filename", "pmol_ES"]]
+    df_result05 = df_result05.loc[:, ["var", "Filename", "pmol_ES_IS"]]
 
-    # —— 5. 构造输出文件名 & 导出 —— #
+    # —— 4. 构造输出文件名 & 导出 —— #
     path_obj  = Path(tracefinder_csv_path)
     base_path = path_obj.parent / path_obj.stem
     # 定义结果文件名后缀和对应的DataFrame
     results = [
-        (result1_suffix, df_result1),
-        (result2_suffix, df_result2),
-        (result3_suffix, df_result3),
-        (result4_suffix, df_result4),
-        (result5_suffix, df_result5)
+        (result01_suffix, df_result01),
+        (result02_suffix, df_result02),
+        (result03_suffix, df_result03),
+        (result04_suffix, df_result04),
+        (result05_suffix, df_result05)
     ]
 
     for suffix, df in results:
@@ -109,6 +109,11 @@ def process_and_export(
         write_csv_path = f"{base_path}{suffix}.csv"
         wide_df.to_csv(write_csv_path, index=False, encoding="utf-8-sig")
         print(f"- \u2713 Successfully exported: {write_csv_path}")
+
+    # —— 5. 日志记录 —— #
+    log_file = path_obj.parent / "matrix_log.txt"
+    with open(log_file, "a") as f:
+        f.write(f"standardcurve={Path(standardcurve_csv_path).name}\n")
 
 def main():
     print("TraceFinder CSV to Matrix")
@@ -126,8 +131,4 @@ def main():
         print("❌ Processing failed: ", e)
 
 if __name__ == "__main__":
-    try:
-        main()
-    except Exception as e:
-        print(f"\n❌ Program exception occurred: {e}")
-    input("\nPress Enter to exit")
+    main()
