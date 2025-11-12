@@ -8,17 +8,12 @@
 
 将`tracefinder-csv-to-matrix.py`放到`AzoSM/src/`下
 
+## 使用
+
+安装python，安装pandas库
+
 推荐使用[uv](https://docs.astral.sh/uv/)进行python管理
 
 ```bash
-cd "D:\science\projects\AzoSM"
-uv init
-uv install pandas
-```
-
-## 使用
-
-```bash
-cd "D:\science\projects\AzoSM"
-uv run python src/tracefinder-csv-to-matrix.py
+python src/tracefinder-csv-to-matrix.py
 ```
