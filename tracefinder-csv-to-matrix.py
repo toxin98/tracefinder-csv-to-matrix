@@ -53,13 +53,13 @@ def process_and_export(
         errors="coerce",  # 将非数值转为NaN
         downcast="float"  # 自动向下转换为最节省内存的数值类型
     )
-    df_result01 = df_result01.rename(columns={"Compound": "var"})
+    df_result01 = df_result01.rename(columns={"Compound": "variable"})
 
     df_with_category = df_result01.assign(
-        category=lambda x: x["var"].str.extract(r"(\S+)", expand=False)
+        category=lambda x: x["variable"].str.extract(r"(\S+)", expand=False)
     )
 
-    df_result02 = df_with_category[~df_with_category["category"].isin(standardcurve_table["applyto"])].loc[:, ["var", "Filename", "Area"]]
+    df_result02 = df_with_category[~df_with_category["category"].isin(standardcurve_table["applyto"])].loc[:, ["variable", "Filename", "Area"]]
 
     merged_df = pd.merge(
         df_with_category,
@@ -71,7 +71,7 @@ def process_and_export(
     merged_df["pmol_ES"] = 10 ** ((np.log10(merged_df["Area"]) - merged_df["b"]) / merged_df["a"])
 
     df_result04 = (
-        merged_df[merged_df["var"].str.contains("ISTD")]
+        merged_df[merged_df["variable"].str.contains("ISTD")]
         .assign(recovery=lambda x: x["pmol_ES"] / x["amount"])
     )
 
@@ -85,12 +85,12 @@ def process_and_export(
         .assign(
             pmol_ES_IS=lambda x: x["pmol_ES"] / x["recovery"]
         )
-        .loc[lambda x: ~x["var"].str.contains("ISTD", na=False)]
+        .loc[lambda x: ~x["variable"].str.contains("ISTD", na=False)]
     )
 
-    df_result03 = merged_df.loc[:, ["var", "Filename", "pmol_ES"]]
-    df_result04 = df_result04.loc[:, ["var", "Filename", "pmol_ES"]]
-    df_result05 = df_result05.loc[:, ["var", "Filename", "pmol_ES_IS"]]
+    df_result03 = merged_df.loc[:, ["variable", "Filename", "pmol_ES"]]
+    df_result04 = df_result04.loc[:, ["variable", "Filename", "pmol_ES"]]
+    df_result05 = df_result05.loc[:, ["variable", "Filename", "pmol_ES_IS"]]
 
     # —— 4. 构造输出文件名 & 导出 —— #
     path_obj  = Path(tracefinder_csv_path)
