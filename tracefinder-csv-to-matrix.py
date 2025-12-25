@@ -112,7 +112,7 @@ def process_and_export(
         print(f"- \u2713 Successfully exported: {write_csv_path}")
 
     # —— 5. 日志记录 —— #
-    log_file = path_obj.parent / "matrix_log.txt"
+    log_file = path_obj.parent / "matrix.log"
     with open(log_file, "w", encoding="utf-8") as f:
         f.write(f"Last run: {datetime.now(timezone.utc).isoformat()}\n")
         f.write(f"standardcurve file: {Path(standardcurve_csv_path).name}\n")
