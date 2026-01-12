@@ -115,7 +115,8 @@ def process_and_export(
     log_file = path_obj.parent / "matrix.log"
     with open(log_file, "w", encoding="utf-8") as f:
         f.write(f"Last run: {datetime.now(timezone.utc).isoformat()}\n")
-        f.write(f"standardcurve file: {Path(standardcurve_csv_path).name}\n")
+        f.write(f"StandardCurve file: {Path(standardcurve_csv_path).name}\n")
+        f.write(f"Standard size: {standard_size}\n")
 
 def main():
     print("TraceFinder CSV to Matrix")
